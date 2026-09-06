@@ -1,0 +1,2659 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Расписание</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg: #f4f6fa;
+            --white: #ffffff;
+            --text: #171b26;
+            --muted: #747b8a;
+            --line: #e5e8ee;
+            --accent: #5b54e8;
+            --accent-light: #eeedff;
+            --danger: #dc4444;
+            --danger-light: #fff1f1;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: var(--text);
+
+            font-family:
+                Inter,
+                -apple-system,
+                BlinkMacSystemFont,
+                "Segoe UI",
+                Arial,
+                sans-serif;
+        }
+
+        /* =========================
+           HEADER
+        ========================= */
+
+        .header {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+
+            background: rgba(255, 255, 255, .96);
+
+            border-bottom: 1px solid var(--line);
+
+            backdrop-filter: blur(10px);
+        }
+
+        .header-inner {
+            max-width: 1450px;
+            margin: auto;
+
+            padding: 17px 24px;
+
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            gap: 20px;
+        }
+
+        .logo {
+            font-size: 21px;
+            font-weight: 800;
+            letter-spacing: -.4px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 9px;
+        }
+
+        .btn {
+            border: 0;
+            border-radius: 11px;
+
+            padding: 11px 15px;
+
+            font-size: 14px;
+            font-weight: 700;
+
+            cursor: pointer;
+
+            transition: .15s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+        }
+
+        .btn-primary {
+            color: #fff;
+            background: var(--accent);
+        }
+
+        .btn-secondary {
+            color: #303542;
+            background: #eef0f4;
+        }
+
+        /* =========================
+           MAIN
+        ========================= */
+
+        .container {
+            max-width: 1450px;
+            margin: auto;
+
+            padding: 34px 24px 60px;
+        }
+
+        .page-title {
+            margin-bottom: 25px;
+        }
+
+        .page-title h1 {
+            margin: 0;
+
+            font-size: clamp(31px, 4vw, 44px);
+
+            letter-spacing: -1.5px;
+        }
+
+        .page-title p {
+            margin: 8px 0 0;
+
+            color: var(--muted);
+
+            font-size: 15px;
+        }
+
+        /* =========================
+           ДНИ НЕДЕЛИ
+        ========================= */
+
+        .week-tabs {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+
+            gap: 10px;
+
+            margin-bottom: 22px;
+        }
+
+        .day-tab {
+            position: relative;
+
+            min-height: 76px;
+
+            padding: 17px 18px;
+
+            text-align: left;
+
+            border: 1px solid var(--line);
+
+            border-radius: 16px;
+
+            background: var(--white);
+
+            cursor: pointer;
+
+            color: var(--text);
+
+            transition: .16s ease;
+        }
+
+        .day-tab:hover {
+            border-color: #cfd3dc;
+        }
+
+        .day-tab.active {
+            border-color: var(--accent);
+
+            background: var(--accent-light);
+
+            box-shadow:
+                0 0 0 2px rgba(91, 84, 232, .08);
+        }
+
+        .day-tab.today::after {
+            content: "Сегодня";
+
+            position: absolute;
+
+            top: 10px;
+            right: 10px;
+
+            padding: 4px 7px;
+
+            border-radius: 7px;
+
+            color: var(--accent);
+
+            background: #dfddff;
+
+            font-size: 10px;
+
+            font-weight: 800;
+        }
+
+        .day-tab-name {
+            display: block;
+
+            font-size: 17px;
+
+            font-weight: 800;
+        }
+
+        .day-tab-date {
+            display: block;
+
+            margin-top: 6px;
+
+            color: var(--muted);
+
+            font-size: 13px;
+        }
+
+        /* =========================
+           РАСПИСАНИЕ
+        ========================= */
+
+        .schedule-card {
+            overflow: hidden;
+
+            background: var(--white);
+
+            border: 1px solid var(--line);
+
+            border-radius: 21px;
+        }
+
+        .schedule-head {
+            padding: 21px 23px;
+
+            border-bottom: 1px solid var(--line);
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: space-between;
+
+            gap: 20px;
+        }
+
+        .schedule-head h2 {
+            margin: 0;
+
+            font-size: 25px;
+
+            letter-spacing: -.5px;
+        }
+
+        .schedule-head p {
+            margin: 6px 0 0;
+
+            color: var(--muted);
+
+            font-size: 14px;
+        }
+
+        .schedule-buttons {
+            display: flex;
+            gap: 9px;
+            flex-wrap: wrap;
+        }
+
+        .lessons {
+            padding: 17px;
+
+            display: grid;
+
+            gap: 10px;
+        }
+
+        .lesson {
+            min-height: 105px;
+
+            display: grid;
+
+            grid-template-columns:
+                100px minmax(0, 1fr) auto;
+
+            align-items: center;
+
+            gap: 22px;
+
+            padding: 17px 19px;
+
+            border: 1px solid var(--line);
+
+            border-radius: 16px;
+
+            background: #fff;
+        }
+
+        .lesson-number {
+            color: var(--muted);
+
+            font-size: 12px;
+
+            font-weight: 800;
+
+            text-transform: uppercase;
+
+            letter-spacing: .4px;
+        }
+
+        .lesson-time {
+            margin-top: 7px;
+
+            font-size: 14px;
+
+            font-weight: 700;
+        }
+
+        .lesson-subject {
+            font-size: 20px;
+
+            line-height: 1.2;
+
+            font-weight: 800;
+        }
+
+        .lesson-teacher {
+            margin-top: 7px;
+
+            color: var(--muted);
+
+            font-size: 14px;
+        }
+
+        .lesson-room {
+            min-width: 80px;
+
+            padding: 9px 12px;
+
+            text-align: center;
+
+            border-radius: 9px;
+
+            background: #f0f2f5;
+
+            color: #4b5260;
+
+            font-size: 13px;
+
+            font-weight: 700;
+        }
+
+        /* =========================
+           ЗВОНКИ
+        ========================= */
+
+        .bells {
+            margin-top: 25px;
+        }
+
+        .bells h2 {
+            margin: 0 0 12px;
+
+            font-size: 21px;
+        }
+
+        .bells-grid {
+            display: grid;
+
+            grid-template-columns: repeat(7, 1fr);
+
+            gap: 9px;
+        }
+
+        .bell {
+            padding: 13px;
+
+            border: 1px solid var(--line);
+
+            border-radius: 13px;
+
+            background: white;
+        }
+
+        .bell strong {
+            display: block;
+
+            margin-bottom: 5px;
+
+            font-size: 13px;
+        }
+
+        .bell span {
+            color: var(--muted);
+
+            font-size: 12px;
+        }
+
+        /* =========================
+           МОДАЛЬНОЕ ОКНО ЗАМЕН
+        ========================= */
+
+        .modal {
+            position: fixed;
+
+            inset: 0;
+
+            z-index: 100;
+
+            display: none;
+
+            align-items: center;
+
+            justify-content: center;
+
+            padding: 20px;
+
+            background: rgba(15, 18, 27, .46);
+        }
+
+        .modal.open {
+            display: flex;
+        }
+
+        .modal-box {
+            width: min(900px, 100%);
+
+            max-height: 90vh;
+
+            overflow: auto;
+
+            background: white;
+
+            border-radius: 22px;
+
+            box-shadow:
+                0 25px 70px rgba(0, 0, 0, .2);
+        }
+
+        .modal-head {
+            position: sticky;
+
+            top: 0;
+
+            z-index: 5;
+
+            padding: 19px 22px;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: space-between;
+
+            background: white;
+
+            border-bottom: 1px solid var(--line);
+        }
+
+        .modal-head h2 {
+            margin: 0;
+
+            font-size: 23px;
+        }
+
+        .close {
+            width: 38px;
+            height: 38px;
+
+            border: 0;
+
+            border-radius: 10px;
+
+            background: #eef0f4;
+
+            cursor: pointer;
+
+            font-size: 20px;
+        }
+
+        .replacement-content {
+            padding: 22px;
+        }
+
+        .replacement-date h3 {
+            margin: 0;
+
+            font-size: 25px;
+        }
+
+        .replacement-date p {
+            margin: 6px 0 18px;
+
+            color: var(--muted);
+        }
+
+        .replacement-lesson {
+            margin-bottom: 10px;
+
+            padding: 16px;
+
+            border: 1px solid var(--line);
+
+            border-radius: 14px;
+        }
+
+        .replacement-lesson.changed {
+            background: var(--danger-light);
+
+            border-color: #efb4b4;
+        }
+
+        .changed-label {
+            display: inline-block;
+
+            margin-bottom: 9px;
+
+            padding: 5px 8px;
+
+            border-radius: 6px;
+
+            background: #ffdede;
+
+            color: #b52828;
+
+            font-size: 10px;
+
+            font-weight: 800;
+        }
+
+        .replacement-row {
+            display: flex;
+
+            justify-content: space-between;
+
+            gap: 20px;
+        }
+
+        .replacement-subject {
+            font-size: 18px;
+
+            font-weight: 800;
+        }
+
+        .replacement-teacher {
+            margin-top: 5px;
+
+            color: var(--muted);
+
+            font-size: 13px;
+        }
+
+        .replacement-meta {
+            text-align: right;
+
+            color: var(--muted);
+
+            font-size: 13px;
+        }
+
+        .replacement-original {
+            margin-top: 10px;
+
+            padding-top: 10px;
+
+            border-top: 1px dashed #d9aaaa;
+
+            color: #8a3333;
+
+            font-size: 12px;
+
+            line-height: 1.5;
+        }
+
+        /* =========================
+           ПЕЧАТЬ
+        ========================= */
+
+        #printWeek,
+        #printDay {
+            display: none;
+        }
+
+        .print-page {
+            font-family: Arial, sans-serif;
+
+            color: #111;
+        }
+
+        .print-college {
+            margin-bottom: 8px;
+
+            font-size: 15px;
+
+            font-weight: bold;
+
+            line-height: 1.3;
+        }
+
+        .print-page h1 {
+            margin: 0 0 8px;
+
+            font-size: 25px;
+        }
+
+        .print-approval {
+            margin-bottom: 16px;
+
+            color: #333;
+
+            font-size: 11px;
+        }
+
+        .print-single-day-header {
+            margin-bottom: 12px;
+
+            padding: 9px 10px;
+
+            text-align: right;
+
+            background: #eeeeee;
+
+            border-bottom: 1px solid #aaa;
+        }
+
+        .print-single-day-header strong {
+            display: block;
+
+            font-size: 15px;
+
+            font-weight: 900;
+
+            text-transform: uppercase;
+        }
+
+        .print-week-grid {
+            display: grid;
+
+            grid-template-columns: repeat(5, 1fr);
+
+            gap: 7px;
+        }
+
+        .print-day-column {
+            border: 1px solid #aaa;
+
+            overflow: hidden;
+        }
+
+        .print-day-header {
+            padding: 8px;
+
+            text-align: center;
+
+            background: #eeeeee;
+
+            border-bottom: 1px solid #aaa;
+        }
+
+        .print-day-header strong {
+            display: block;
+
+            font-size: 14px;
+
+            font-weight: 900;
+        }
+
+        .print-lesson {
+            min-height: 58px;
+
+            padding: 7px;
+
+            border-bottom: 1px solid #ddd;
+        }
+
+        .print-lesson:last-child {
+            border-bottom: 0;
+        }
+
+        .print-time {
+            color: #555;
+
+            font-size: 9px;
+
+            margin-bottom: 3px;
+        }
+
+        .print-subject {
+            font-size: 11px;
+
+            font-weight: bold;
+
+            line-height: 1.2;
+        }
+
+        .print-teacher {
+            margin-top: 3px;
+
+            color: #555;
+
+            font-size: 8px;
+
+            line-height: 1.2;
+        }
+
+        .print-room {
+            margin-top: 3px;
+
+            color: #555;
+
+            font-size: 8px;
+        }
+
+        .print-day-table {
+            width: 100%;
+
+            border-collapse: collapse;
+
+            font-size: 11px;
+        }
+
+        .print-day-table th,
+        .print-day-table td {
+            border: 1px solid #999;
+
+            padding: 8px;
+
+            vertical-align: top;
+        }
+
+        .print-day-table th {
+            background: #eeeeee;
+
+            text-align: left;
+
+            font-weight: bold;
+        }
+
+        .print-replacement-line {
+            margin: 5px 0;
+
+            border-top: 1px dashed #999;
+        }
+
+        .print-old-value {
+            color: #555;
+
+            font-size: 9px;
+
+            line-height: 1.3;
+
+            font-weight: normal;
+        }
+
+        .print-old-value strong {
+            font-weight: bold;
+        }
+
+        /* =========================
+           АДАПТИВ
+        ========================= */
+
+        @media (max-width: 900px) {
+
+            .week-tabs {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .lesson {
+                grid-template-columns:
+                    75px minmax(0, 1fr);
+            }
+
+            .lesson-room {
+                grid-column: 2;
+
+                justify-self: start;
+            }
+
+            .bells-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+        }
+
+        @media (max-width: 600px) {
+
+            .header-inner,
+            .container {
+                padding-left: 14px;
+                padding-right: 14px;
+            }
+
+            .header-inner {
+                align-items: flex-start;
+
+                flex-direction: column;
+            }
+
+            .header-actions {
+                width: 100%;
+            }
+
+            .header-actions .btn {
+                flex: 1;
+            }
+
+            .week-tabs {
+                grid-template-columns: 1fr;
+            }
+
+            .schedule-head {
+                align-items: flex-start;
+
+                flex-direction: column;
+            }
+
+            .schedule-buttons {
+                width: 100%;
+            }
+
+            .schedule-buttons .btn {
+                flex: 1;
+            }
+
+            .lesson {
+                grid-template-columns: 1fr;
+
+                gap: 10px;
+            }
+
+            .lesson-room {
+                grid-column: auto;
+            }
+
+            .replacement-row {
+                display: block;
+            }
+
+            .replacement-meta {
+                margin-top: 10px;
+
+                text-align: left;
+            }
+
+            .print-day-table {
+                font-size: 9px;
+            }
+
+            .print-day-table th,
+            .print-day-table td {
+                padding: 6px;
+            }
+
+        }
+
+        /* =========================
+           ПЕЧАТЬ
+        ========================= */
+
+        @media print {
+
+            @page {
+                size: A4 landscape;
+
+                margin: 7mm;
+            }
+
+            html,
+            body {
+                width: 100%;
+
+                background: white !important;
+            }
+
+            body>*:not(#printWeek):not(#printDay) {
+                display: none !important;
+            }
+
+            #printWeek {
+                display: block !important;
+            }
+
+            #printDay {
+                display: none !important;
+            }
+
+            body.print-day #printWeek {
+                display: none !important;
+            }
+
+            body.print-day #printDay {
+                display: block !important;
+            }
+
+        }
+
+        body.print-day #printDay {
+            display: block;
+        }
+
+        body.print-day #printWeek {
+            display: none;
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <header class="header">
+
+        <div class="header-inner">
+
+            <div class="logo">
+                📚 Расписание
+            </div>
+
+            <div class="header-actions">
+
+                <button class="btn btn-secondary" onclick="openReplacements()">
+                    Расписание с заменами
+                </button>
+
+                <button class="btn btn-primary" onclick="printFullWeek()">
+                    🖨 Печать всей недели
+                </button>
+
+            </div>
+
+        </div>
+
+    </header>
+
+
+    <main class="container">
+
+        <div class="page-title">
+
+            <h1>
+                Расписание занятий
+            </h1>
+
+            <p id="currentWeekText">
+                Дата согласования расписания: 01 сентября 2026г.
+            </p>
+
+        </div>
+
+
+        <div class="week-tabs" id="weekTabs"></div>
+
+
+        <section class="schedule-card">
+
+            <div class="schedule-head">
+
+                <div>
+
+                    <h2 id="selectedDayTitle"></h2>
+
+                    <p id="selectedDayDate"></p>
+
+                </div>
+
+
+                <div class="schedule-buttons">
+
+                    <button class="btn btn-secondary" onclick="printSelectedDay()">
+                        🖨 Печать дня
+                    </button>
+
+                    <button class="btn btn-primary" onclick="printReplacementDay()">
+                        🖨 Печать дня с заменами
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <div class="lessons" id="lessons"></div>
+
+        </section>
+
+
+        <section class="bells">
+
+            <h2>
+                Время звонков
+            </h2>
+
+            <div class="bells-grid" id="bells"></div>
+
+        </section>
+
+    </main>
+
+
+    <!-- =========================
+         МОДАЛЬНОЕ ОКНО ЗАМЕН
+    ========================= -->
+
+    <div class="modal" id="replacementModal">
+
+        <div class="modal-box">
+
+            <div class="modal-head">
+
+                <h2>
+                    Расписание с заменами
+                </h2>
+
+                <button class="close" onclick="closeReplacements()">
+                    ×
+                </button>
+
+            </div>
+
+
+            <div class="replacement-content" id="replacementContent"></div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =========================
+         ПЕЧАТЬ
+    ========================= -->
+
+    <div id="printWeek"></div>
+
+    <div id="printDay"></div>
+
+
+    <script>
+
+        /* =========================================================
+           НАСТРОЙКИ
+        ========================================================= */
+
+        const collegeName =
+            'Учреждение образования "Гомельский государственный колледж строителей"';
+
+        const approvalDate =
+            "01 сентября 2026г.";
+
+
+        /* =========================================================
+           ⭐ НАСТРОЙКА ЗАМЕН
+           
+           ЗДЕСЬ МЕНЯЕШЬ ТОЛЬКО ДЕНЬ
+        ========================================================= */
+
+        const replacementDay = "Понедельник";
+
+
+        /*
+           ⭐ ЗДЕСЬ УКАЗЫВАЕШЬ ЗАМЕНЫ
+
+           Номер урока:
+           1, 2, 3, 4, 5...
+
+           Если замен несколько — просто добавляй их ниже.
+
+           Если замен в этот день нет:
+           
+           const replacements = {};
+
+        */
+
+        const replacements = {
+
+            4: {
+                subject: "ДПЮ",
+                teacher: "Ковшеенко В.К.",
+                room: "41"
+            },
+
+            5: {
+                subject: "История",
+                teacher: "Тукач В.М.",
+                room: "12"
+            }
+
+        };
+
+
+        /*
+           ПРИМЕР:
+
+           const replacements = {
+
+               1: {
+                   subject: "Химия",
+                   teacher: "Соколова Ольга Дмитриевна",
+                   room: "304"
+               },
+
+               3: {
+                   subject: "История",
+                   teacher: "Кузнецова Мария Игоревна",
+                   room: "201"
+               },
+
+               5: {
+                   subject: "Физика",
+                   teacher: "Смирнов Алексей Олегович",
+                   room: "305"
+               }
+
+           };
+
+        */
+
+
+        /* =========================================================
+           РАСПИСАНИЕ
+        ========================================================= */
+
+        const schedule = {
+
+            Понедельник: [
+
+                {
+                    subject: "Обществоведение",
+                    teacher: "Бернадская Н.П.",
+                    room: "11"
+                },
+
+                {
+                    subject: "Русский язык",
+                    teacher: "Гришечкина Е.А.",
+                    room: "43"
+                },
+
+                {
+                    subject: "Английский язык",
+                    teacher: "Засоркина К.С./Бондаренко А.П.",
+                    room: "48/37"
+                },
+
+                {
+                    subject: "Физика",
+                    teacher: "Фурс Н.Н.",
+                    room: "23"
+                },
+
+                {
+                    subject: "Биология",
+                    teacher: "Кушнерова Г.Л.",
+                    room: "46"
+                },
+                
+                {
+                    subject: "ОБЕД",
+                    teacher: "",
+                    room: "-"
+                },
+
+                {
+                    subject: "Математика",
+                    teacher: "Тимченко Е.Г.",
+                    room: "34"
+                },
+
+                {
+                    subject: "Математика",
+                    teacher: "Тимченко Е.Г.",
+                    room: "34"
+                },
+
+            ],
+
+
+            Вторник: [
+
+                {
+                    subject: "ДПЮ",
+                    teacher: "Ковшеенко В.К.",
+                    room: "41"
+                },
+
+                {
+                    subject: "Английский язык",
+                    teacher: "Засоркина К.С./Бондаренко А.П.",
+                    room: "48/37"
+                },
+
+                {
+                    subject: "Математика",
+                    teacher: "Тимченко Е.Г.",
+                    room: "34"
+                },
+
+                {
+                    subject: "Физкультура",
+                    teacher: "Мохарев С.В.",
+                    room: "С/З"
+                },
+
+                {
+                    subject: "Белорусский язык",
+                    teacher: "Антошевская Т.Н.",
+                    room: "36"
+                },
+
+                {
+                    subject: "ОБЕД",
+                    teacher: "",
+                    room: "-"
+                },
+
+                {
+                    subject: "Специальная технология",
+                    teacher: "Качура Л.В.",
+                    room: "45"
+                },
+
+            ],
+
+
+            Среда: [
+
+                {
+                    subject: "Прикладная информатика / 1",
+                    teacher: "Власов А.Г.",
+                    room: "31"
+                },
+
+                {
+                    subject: "Прикладная информатика / 1",
+                    teacher: "Власов А.Г.",
+                    room: "31"
+                },
+
+                {
+                    subject: "Русская литература",
+                    teacher: "Гришечкина Е.А.",
+                    room: "43"
+                },
+
+                {
+                    subject: "Основы права",
+                    teacher: "Бернадская Н.П.",
+                    room: "11"
+                },
+
+                {
+                    subject: "ОБЕД",
+                    teacher: "",
+                    room: "-"
+                },
+
+                {
+                    subject: "Математика",
+                    teacher: "Тимченко Е.Г.",
+                    room: "34"
+                },
+
+                {
+                    subject: "Беларусская литература",
+                    teacher: "Антошевская Т.Н.",
+                    room: "36"
+                },
+
+                {
+                    subject: "Основы права",
+                    teacher: "Бернадская Н.П.",
+                    room: "11"
+                },
+
+                {
+                    subject: "Прикладная информатика / 2",
+                    teacher: "Власов А.Г.",
+                    room: "31"
+                },
+
+                {
+                    subject: "Прикладная информатика / 2",
+                    teacher: "Власов А.Г.",
+                    room: "31"
+                },
+
+            ],
+
+
+            Четверг: [
+
+                {
+                    subject: "Специальная технология",
+                    teacher: "Качура Л.В.",
+                    room: "45"
+                },
+
+                {
+                    subject: "Специальная технология",
+                    teacher: "Качура Л.В.",
+                    room: "45"
+                },
+
+                {
+                    subject: "Физкультура",
+                    teacher: "Мохарев С.В.",
+                    room: "С/З"
+                },
+
+                {
+                    subject: "Математика",
+                    teacher: "Тимченко Е.Г.",
+                    room: "34"
+                },
+
+                {
+                    subject: "ОБЕД",
+                    teacher: "",
+                    room: "-"
+                },
+
+                {
+                    subject: "Биология",
+                    teacher: "Кушнерова Г.Л.",
+                    room: "46"
+                },
+
+                {
+                    subject: "Химия",
+                    teacher: "Валевич Е.В.",
+                    room: "35"
+                },
+
+                {
+                    subject: "Химия",
+                    teacher: "Валевич Е.В.",
+                    room: "35"
+                },
+
+            ],
+
+
+            Пятница: [
+
+                {
+                    subject: "Охрана труда",
+                    teacher: "Коноплицкий С.Г.",
+                    room: "44"
+                },
+
+                {
+                    subject: "Физкультура",
+                    teacher: "Мохарев С.В.",
+                    room: "С/З"
+                },
+
+                {
+                    subject: "Физика",
+                    teacher: "Фурс Н.Н.",
+                    room: "23"
+                },
+
+                {
+                    subject: "История",
+                    teacher: "Тукач В.М.",
+                    room: "12"
+                },
+
+                {
+                    subject: "История",
+                    teacher: "Тукач В.М.",
+                    room: "12"
+                },
+
+                {
+                    subject: "ОБЕД",
+                    teacher: "",
+                    room: "-"
+                },
+
+                {
+                    subject: "География",
+                    teacher: "Кушнерова Г.Л.",
+                    room: "46"
+                },
+
+                {
+                    subject: "География",
+                    teacher: "Кушнерова Г.Л.",
+                    room: "46"
+                },
+
+            ]
+
+        };
+
+
+        /* =========================================================
+           ЗВОНКИ
+        ========================================================= */
+
+        const bells = [
+
+            ["08:55", "09:40"],
+            ["09:50", "10:35"],
+            ["10:45", "11:30"],
+            ["11:40", "12:25"],
+            ["12:45", "13:30"],
+            ["13:40", "14:25"],
+            ["14:35", "15:20"],
+            ["15:30", "16:15"],
+            ["16:25", "17:10"],
+            ["17:20", "18:05"],
+        ];
+
+
+        /* =========================================================
+           ДНИ
+        ========================================================= */
+
+        const days = [
+
+            "Понедельник",
+            "Вторник",
+            "Среда",
+            "Четверг",
+            "Пятница"
+
+        ];
+
+
+        let selectedDay =
+            getTodayDay();
+
+
+        /* =========================================================
+           ДАТЫ
+        ========================================================= */
+
+        function getMonday(date) {
+
+            const d =
+                new Date(date);
+
+            const day =
+                d.getDay();
+
+            const difference =
+                day === 0
+                    ? -6
+                    : 1 - day;
+
+            d.setDate(
+                d.getDate() + difference
+            );
+
+            d.setHours(
+                0,
+                0,
+                0,
+                0
+            );
+
+            return d;
+        }
+
+
+        function getWeekDates() {
+
+            const monday =
+                getMonday(new Date());
+
+            return days.map(
+                (_, index) => {
+
+                    const date =
+                        new Date(monday);
+
+                    date.setDate(
+                        monday.getDate() + index
+                    );
+
+                    return date;
+
+                }
+            );
+
+        }
+
+
+        function formatDate(date) {
+
+            return date.toLocaleDateString(
+                "ru-RU",
+                {
+                    day: "numeric",
+                    month: "long"
+                }
+            );
+
+        }
+
+
+        function formatDateFull(date) {
+
+            return date.toLocaleDateString(
+                "ru-RU",
+                {
+                    weekday: "long",
+                    day: "numeric",
+                    month: "long",
+                    year: "numeric"
+                }
+            );
+
+        }
+
+
+        /* =========================================================
+           ТЕКУЩИЙ ДЕНЬ
+        ========================================================= */
+
+        function getTodayDay() {
+
+            const day =
+                new Date().getDay();
+
+            if (day === 1)
+                return "Понедельник";
+
+            if (day === 2)
+                return "Вторник";
+
+            if (day === 3)
+                return "Среда";
+
+            if (day === 4)
+                return "Четверг";
+
+            if (day === 5)
+                return "Пятница";
+
+            return "Понедельник";
+
+        }
+
+
+        /* =========================================================
+           ПРОВЕРКА ДНЯ ЗАМЕН
+        ========================================================= */
+
+        function getReplacementLessons() {
+
+            return schedule[replacementDay] || [];
+
+        }
+
+
+        /* =========================================================
+           КНОПКИ ДНЕЙ
+        ========================================================= */
+
+        function renderWeekTabs() {
+
+            const container =
+                document.getElementById(
+                    "weekTabs"
+                );
+
+            const dates =
+                getWeekDates();
+
+            const today =
+                new Date();
+
+            container.innerHTML =
+                "";
+
+            days.forEach(
+                (day, index) => {
+
+                    const date =
+                        dates[index];
+
+                    const isToday =
+                        date.toDateString() ===
+                        today.toDateString();
+
+                    const button =
+                        document.createElement(
+                            "button"
+                        );
+
+                    button.className =
+                        "day-tab" +
+
+                        (
+                            selectedDay === day
+                                ? " active"
+                                : ""
+                        ) +
+
+                        (
+                            isToday
+                                ? " today"
+                                : ""
+                        );
+
+                    button.innerHTML = `
+
+                        <span class="day-tab-name">
+                            ${day}
+                        </span>
+
+                        <span class="day-tab-date">
+                            ${formatDate(date)}
+                        </span>
+
+                    `;
+
+                    button.onclick = () => {
+
+                        selectedDay =
+                            day;
+
+                        renderWeekTabs();
+
+                        renderSelectedDay();
+
+                    };
+
+                    container.appendChild(
+                        button
+                    );
+
+                }
+            );
+
+
+            document.getElementById(
+                "currentWeekText"
+            ).textContent =
+
+                `Дата согласования расписания: ${approvalDate}`;
+
+        }
+
+
+        /* =========================================================
+           ОБЫЧНОЕ РАСПИСАНИЕ
+           БЕЗ ЗАМЕН
+        ========================================================= */
+
+        function renderSelectedDay() {
+
+            const dates =
+                getWeekDates();
+
+            const dayIndex =
+                days.indexOf(
+                    selectedDay
+                );
+
+            const date =
+                dates[dayIndex];
+
+            document.getElementById(
+                "selectedDayTitle"
+            ).textContent =
+                selectedDay;
+
+            document.getElementById(
+                "selectedDayDate"
+            ).textContent =
+                formatDateFull(date);
+
+
+            const container =
+                document.getElementById(
+                    "lessons"
+                );
+
+            const lessons =
+                schedule[selectedDay] || [];
+
+
+            if (!lessons.length) {
+
+                container.innerHTML =
+
+                    `<div
+                        style="
+                            padding:40px;
+                            text-align:center;
+                            color:#777
+                        "
+                    >
+                        В этот день уроков нет
+                    </div>`;
+
+                return;
+            }
+
+
+            container.innerHTML =
+
+                lessons.map(
+                    (lesson, index) => {
+
+                        return `
+
+                            <article class="lesson">
+
+                                <div>
+
+                                    <div class="lesson-number">
+                                        Урок ${index + 1}
+                                    </div>
+
+                                    <div class="lesson-time">
+
+                                        ${bells[index]?.[0] || "--:--"}
+
+                                        —
+
+                                        ${bells[index]?.[1] || "--:--"}
+
+                                    </div>
+
+                                </div>
+
+
+                                <div>
+
+                                    <div class="lesson-subject">
+                                        ${lesson.subject}
+                                    </div>
+
+                                    <div class="lesson-teacher">
+                                        ${lesson.teacher}
+                                    </div>
+
+                                </div>
+
+
+                                <div class="lesson-room">
+                                    ${lesson.room}
+                                </div>
+
+                            </article>
+
+                        `;
+
+                    }
+                ).join("");
+
+        }
+
+
+        /* =========================================================
+           ЗВОНКИ
+        ========================================================= */
+
+        function renderBells() {
+
+            const container =
+                document.getElementById(
+                    "bells"
+                );
+
+            container.innerHTML =
+
+                bells.map(
+                    (bell, index) => `
+
+                        <div class="bell">
+
+                            <strong>
+                                ${index + 1} урок
+                            </strong>
+
+                            <span>
+                                ${bell[0]} — ${bell[1]}
+                            </span>
+
+                        </div>
+
+                    `
+                ).join("");
+
+        }
+
+
+        /* =========================================================
+           МОДАЛЬНОЕ ОКНО ЗАМЕН
+        ========================================================= */
+
+        function openReplacements() {
+
+            document
+                .getElementById(
+                    "replacementModal"
+                )
+                .classList.add("open");
+
+            renderReplacementContent();
+
+        }
+
+
+        function closeReplacements() {
+
+            document
+                .getElementById(
+                    "replacementModal"
+                )
+                .classList.remove("open");
+
+        }
+
+
+        /* =========================================================
+           СОДЕРЖИМОЕ ЗАМЕН
+        ========================================================= */
+
+        function renderReplacementContent() {
+
+            const container =
+                document.getElementById(
+                    "replacementContent"
+                );
+
+            const dates =
+                getWeekDates();
+
+            const dayIndex =
+                days.indexOf(
+                    replacementDay
+                );
+
+            const date =
+                dates[dayIndex];
+
+            const lessons =
+                getReplacementLessons();
+
+
+            const replacementCount =
+                Object.keys(
+                    replacements
+                ).length;
+
+
+            let html = `
+
+                <div class="replacement-date">
+
+                    <h3>
+                        ${formatDateFull(date)}
+                    </h3>
+
+                    <p>
+
+                        ${replacementCount
+
+                    ? `Изменений: ${replacementCount}`
+
+                    : "Замен на этот день нет"
+                }
+
+                    </p>
+
+                </div>
+
+            `;
+
+
+            if (!lessons.length) {
+
+                html += `
+
+                    <div
+                        style="
+                            padding:30px;
+                            text-align:center;
+                            color:#777
+                        "
+                    >
+                        В этот день уроков нет.
+                    </div>
+
+                `;
+
+            }
+
+
+            lessons.forEach(
+                (lesson, index) => {
+
+                    const replacement =
+                        replacements[index + 1];
+
+                    const changed =
+                        Boolean(replacement);
+
+                    const currentLesson =
+                        changed
+                            ? replacement
+                            : lesson;
+
+
+                    html += `
+
+                        <div class="
+                            replacement-lesson
+                            ${changed ? "changed" : ""}
+                        ">
+
+                            ${changed
+
+                            ? `
+                                        <span class="changed-label">
+                                            Замена
+                                        </span>
+                                      `
+
+                            : ""
+                        }
+
+
+                            <div class="replacement-row">
+
+                                <div>
+
+                                    <div class="replacement-subject">
+
+                                        ${index + 1}.
+                                        ${currentLesson.subject}
+
+                                    </div>
+
+                                    <div class="replacement-teacher">
+                                        ${currentLesson.teacher}
+                                    </div>
+
+                                </div>
+
+
+                                <div class="replacement-meta">
+
+                                    <div>
+
+                                        ${bells[index]?.[0] || "--:--"}
+
+                                        —
+
+                                        ${bells[index]?.[1] || "--:--"}
+
+                                    </div>
+
+                                    <div>
+
+                                        Кабинет:
+                                        ${currentLesson.room}
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+
+                            ${changed
+
+                            ? `
+
+                                        <div class="replacement-original">
+
+                                            <strong>
+                                                По расписанию:
+                                            </strong>
+
+                                            ${lesson.subject}
+
+                                            <br>
+
+                                            ${lesson.teacher}
+
+                                            <br>
+
+                                            Кабинет:
+                                            ${lesson.room}
+
+                                        </div>
+
+                                      `
+
+                            : ""
+                        }
+
+                        </div>
+
+                    `;
+
+                }
+            );
+
+
+            html += `
+
+                <div
+                    style="
+                        margin-top:18px;
+                        display:flex;
+                        justify-content:flex-end;
+                    "
+                >
+
+                    <button
+                        class="btn btn-primary"
+                        onclick="printReplacementSelectedDay()"
+                    >
+                        🖨 Печать этого дня с заменами
+                    </button>
+
+                </div>
+
+            `;
+
+
+            container.innerHTML =
+                html;
+
+        }
+
+
+        /* =========================================================
+           ПЕЧАТЬ ВСЕЙ НЕДЕЛИ
+           БЕЗ ЗАМЕН
+        ========================================================= */
+
+        function buildPrintWeek() {
+
+            let html = `
+
+                <div class="print-page">
+
+                    <div class="print-college">
+                        ${collegeName}
+                    </div>
+
+                    <h1>
+                        Расписание занятий
+                    </h1>
+
+                    <div class="print-approval">
+
+                        Дата согласования расписания:
+                        ${approvalDate}
+
+                    </div>
+
+                    <div class="print-week-grid">
+
+            `;
+
+
+            days.forEach(
+                (day) => {
+
+                    const lessons =
+                        schedule[day] || [];
+
+
+                    html += `
+
+                        <div class="print-day-column">
+
+                            <div class="print-day-header">
+
+                                <strong>
+                                    ${day}
+                                </strong>
+
+                            </div>
+
+                    `;
+
+
+                    lessons.forEach(
+                        (lesson, lessonIndex) => {
+
+                            html += `
+
+                                <div class="print-lesson">
+
+                                    <div class="print-time">
+
+                                        Урок
+                                        ${lessonIndex + 1}
+
+                                        ·
+
+                                        ${bells[lessonIndex]?.[0] || "--:--"}
+
+                                        —
+
+                                        ${bells[lessonIndex]?.[1] || "--:--"}
+
+                                    </div>
+
+                                    <div class="print-subject">
+                                        ${lesson.subject}
+                                    </div>
+
+                                    <div class="print-teacher">
+                                        ${lesson.teacher}
+                                    </div>
+
+                                    <div class="print-room">
+
+                                        Кабинет:
+                                        ${lesson.room}
+
+                                    </div>
+
+                                </div>
+
+                            `;
+
+                        }
+                    );
+
+
+                    html += `
+
+                        </div>
+
+                    `;
+
+                }
+            );
+
+
+            html += `
+
+                    </div>
+
+                </div>
+
+            `;
+
+
+            document.getElementById(
+                "printWeek"
+            ).innerHTML =
+                html;
+
+        }
+
+
+        function printFullWeek() {
+
+            buildPrintWeek();
+
+            document.body.classList.remove(
+                "print-day"
+            );
+
+            requestAnimationFrame(
+                () => {
+
+                    requestAnimationFrame(
+                        () => {
+
+                            window.print();
+
+                        }
+                    );
+
+                }
+            );
+
+        }
+
+
+        /* =========================================================
+           ПЕЧАТЬ ОБЫЧНОГО ДНЯ
+        ========================================================= */
+
+        function printSelectedDay() {
+
+            buildPrintSelectedDay();
+
+            document.body.classList.add(
+                "print-day"
+            );
+
+            requestAnimationFrame(
+                () => {
+
+                    requestAnimationFrame(
+                        () => {
+
+                            window.print();
+
+                        }
+                    );
+
+                }
+            );
+
+        }
+
+
+        function buildPrintSelectedDay() {
+
+            const lessons =
+                schedule[selectedDay] || [];
+
+
+            let html = `
+
+                <div class="print-page">
+
+                    <div class="print-college">
+                        ${collegeName}
+                    </div>
+
+                    <h1>
+                        Расписание занятий
+                    </h1>
+
+                    <div class="print-approval">
+
+                        Дата согласования расписания:
+                        ${approvalDate}
+
+                    </div>
+
+                    <div class="print-single-day-header">
+
+                        <strong>
+                            ${selectedDay.toUpperCase()}
+                        </strong>
+
+                    </div>
+
+
+                    <table class="print-day-table">
+
+                        <thead>
+
+                            <tr>
+
+                                <th>№</th>
+
+                                <th>Время</th>
+
+                                <th>Предмет</th>
+
+                                <th>Преподаватель</th>
+
+                                <th>Кабинет</th>
+
+                            </tr>
+
+                        </thead>
+
+                        <tbody>
+
+            `;
+
+
+            lessons.forEach(
+                (lesson, index) => {
+
+                    html += `
+
+                        <tr>
+
+                            <td>
+                                ${index + 1}
+                            </td>
+
+                            <td style="white-space:nowrap;">
+
+                                ${bells[index]?.[0] || "--:--"}
+
+                                —
+
+                                ${bells[index]?.[1] || "--:--"}
+
+                            </td>
+
+                            <td style="font-weight:bold;">
+
+                                ${lesson.subject}
+
+                            </td>
+
+                            <td>
+                                ${lesson.teacher}
+                            </td>
+
+                            <td>
+                                ${lesson.room}
+                            </td>
+
+                        </tr>
+
+                    `;
+
+                }
+            );
+
+
+            html += `
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            `;
+
+
+            document.getElementById(
+                "printDay"
+            ).innerHTML =
+                html;
+
+        }
+
+
+        /* =========================================================
+           ПЕЧАТЬ ДНЯ С ЗАМЕНАМИ
+        ========================================================= */
+
+        function printReplacementDay() {
+
+            printReplacementSelectedDay();
+
+        }
+
+
+        function printReplacementSelectedDay() {
+
+            const lessons =
+                schedule[replacementDay] || [];
+
+            const dayReplacements =
+                replacements || {};
+
+
+            let html = `
+
+                <div class="print-page">
+
+                    <div class="print-college">
+                        ${collegeName}
+                    </div>
+
+                    <h1>
+                        Расписание с заменами
+                    </h1>
+
+                        <div class="print-single-day-header">
+
+                        <strong>
+                            ${replacementDay.toUpperCase()}
+                        </strong>
+
+                    </div>
+
+
+                    <table class="print-day-table">
+
+                        <thead>
+
+                            <tr>
+
+                                <th>№</th>
+
+                                <th>Время</th>
+
+                                <th>Предмет</th>
+
+                                <th>Преподаватель</th>
+
+                                <th>Кабинет</th>
+
+                            </tr>
+
+                        </thead>
+
+                        <tbody>
+
+            `;
+
+
+            lessons.forEach(
+                (lesson, index) => {
+
+                    const replacement =
+                        dayReplacements[index + 1];
+
+                    const changed =
+                        Boolean(replacement);
+
+
+                    /* =========================
+                       ОБЫЧНЫЙ УРОК
+                    ========================= */
+
+                    if (!changed) {
+
+                        html += `
+
+                            <tr>
+
+                                <td>
+                                    ${index + 1}
+                                </td>
+
+                                <td style="white-space:nowrap;">
+
+                                    ${bells[index]?.[0] || "--:--"}
+
+                                    —
+
+                                    ${bells[index]?.[1] || "--:--"}
+
+                                </td>
+
+                                <td style="font-weight:bold;">
+                                    ${lesson.subject}
+                                </td>
+
+                                <td>
+                                    ${lesson.teacher}
+                                </td>
+
+                                <td>
+                                    ${lesson.room}
+                                </td>
+
+                            </tr>
+
+                        `;
+
+                        return;
+                    }
+
+
+                    /* =========================
+                       УРОК С ЗАМЕНОЙ
+                    ========================= */
+
+                    html += `
+
+                        <tr>
+
+                            <td>
+                                ${index + 1}
+                            </td>
+
+
+                            <td style="white-space:nowrap;">
+
+                                ${bells[index]?.[0] || "--:--"}
+
+                                —
+
+                                ${bells[index]?.[1] || "--:--"}
+
+                            </td>
+
+
+                            <td style="font-weight:bold;">
+
+                                ${replacement.subject}
+
+                                <div class="print-replacement-line"></div>
+
+                                <div class="print-old-value">
+
+                                    <strong>
+                                        По расписанию:
+                                    </strong>
+
+                                    ${lesson.subject}
+
+                                </div>
+
+                            </td>
+
+
+                            <td>
+
+                                ${replacement.teacher}
+
+                                <div class="print-replacement-line"></div>
+
+                                <div class="print-old-value">
+
+                                    ${lesson.teacher}
+
+                                </div>
+
+                            </td>
+
+
+                            <td>
+
+                                ${replacement.room}
+
+                                <div class="print-replacement-line"></div>
+
+                                <div class="print-old-value">
+
+                                    ${lesson.room}
+
+                                </div>
+
+                            </td>
+
+                        </tr>
+
+                    `;
+
+                }
+            );
+
+
+            html += `
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            `;
+
+
+            document.getElementById(
+                "printDay"
+            ).innerHTML =
+                html;
+
+
+            document.body.classList.add(
+                "print-day"
+            );
+
+
+            requestAnimationFrame(
+                () => {
+
+                    requestAnimationFrame(
+                        () => {
+
+                            window.print();
+
+                        }
+                    );
+
+                }
+            );
+
+        }
+
+
+        /* =========================================================
+           ПОСЛЕ ПЕЧАТИ
+        ========================================================= */
+
+        window.addEventListener(
+            "afterprint",
+            () => {
+
+                document.body.classList.remove(
+                    "print-day"
+                );
+
+            }
+        );
+
+
+        /* =========================================================
+           ЗАКРЫТИЕ МОДАЛКИ
+        ========================================================= */
+
+        document
+            .getElementById(
+                "replacementModal"
+            )
+            .addEventListener(
+                "click",
+                event => {
+
+                    if (
+                        event.target ===
+                        event.currentTarget
+                    ) {
+
+                        closeReplacements();
+
+                    }
+
+                }
+            );
+
+
+        document.addEventListener(
+            "keydown",
+            event => {
+
+                if (
+                    event.key === "Escape"
+                ) {
+
+                    closeReplacements();
+
+                }
+
+            }
+        );
+
+
+        /* =========================================================
+           ЗАПУСК
+        ========================================================= */
+
+        renderWeekTabs();
+
+        renderSelectedDay();
+
+        renderBells();
+
+    </script>
+
+</body>
+
+</html>
