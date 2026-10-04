@@ -1,0 +1,904 @@
+<!doctype html>
+<html lang="ru">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+    <meta name="theme-color" content="#ffffff">
+    <title>BusPOS — Мобильная касса</title>
+    <style>
+        :root {
+            --bg: #fff;
+            --nav: #fff;
+            --card: #fff;
+            --text: #000;
+            --muted: #555;
+            --blue: #000;
+            --blue2: #000;
+            --green: #000;
+            --red: #000;
+            --line: #d9d9d9;
+            --shadow: 0 10px 30px rgba(15, 23, 42, .08);
+            --r: 22px;
+        }
+
+        * {
+            box-sizing: border-box
+        }
+
+        html,
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: var(--text);
+            font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif
+        }
+
+        button,
+        input {
+            font: inherit
+        }
+
+        button {
+            border: 0
+        }
+
+        .app {
+            width: min(520px, 100%);
+            min-height: 100vh;
+            margin: auto;
+            background: var(--bg);
+            padding-bottom: 92px
+        }
+
+        .header {
+            background: #fff;
+            color: #000;
+            border-bottom: 1px solid #d9d9d9;
+            padding: 16px 16px 18px;
+            position: sticky;
+            top: 0;
+            z-index: 10
+        }
+
+        .headrow {
+            display: flex;
+            justify-content: space-between;
+            align-items: center
+        }
+
+        .logo {
+            font-size: 20px;
+            font-weight: 900
+        }
+
+        .clock {
+            font-weight: 800;
+            font-variant-numeric: tabular-nums
+        }
+
+        .route {
+            margin-top: 7px;
+            font-size: 12px;
+            color: #555;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis
+        }
+
+        .page {
+            padding: 14px
+        }
+
+        .hidden {
+            display: none !important
+        }
+
+        .card {
+            background: var(--card);
+            border-radius: var(--r);
+            padding: 16px;
+            box-shadow: var(--shadow);
+            margin-bottom: 14px
+        }
+
+        .hero {
+            background: #fff;
+            color: #000;
+            border: 1px solid #d9d9d9
+        }
+
+        .caption {
+            font-size: 12px;
+            color: var(--muted);
+            font-weight: 700
+        }
+
+        .hero .caption {
+            color: #555
+        }
+
+        .big {
+            font-size: 25px;
+            font-weight: 900;
+            margin-top: 4px
+        }
+
+        .direction {
+            font-size: 14px;
+            font-weight: 800;
+            margin-top: 5px
+        }
+
+        .action {
+            width: 100%;
+            padding: 16px;
+            border-radius: 17px;
+            font-weight: 850;
+            font-size: 15px
+        }
+
+        .primary {
+            background: var(--blue);
+            color: #fff
+        }
+
+        .secondary {
+            background: #f5f5f5;
+            color: #18212f
+        }
+
+        .green {
+            background: var(--green);
+            color: #fff
+        }
+
+        .blue {
+            background: var(--blue);
+            color: #fff
+        }
+
+        .grid2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px
+        }
+
+        .select-card {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px;
+            border: 1px solid var(--line);
+            border-radius: 17px;
+            background: #fff;
+            cursor: pointer
+        }
+
+        .select-card:active,
+        .stop-item:active,
+        .type-card:active {
+            transform: scale(.985)
+        }
+
+        .select-left {
+            min-width: 0
+        }
+
+        .select-value {
+            font-size: 16px;
+            font-weight: 850;
+            margin-top: 3px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis
+        }
+
+        .arrow {
+            font-size: 25px;
+            color: #94a3b8
+        }
+
+        .distance {
+            text-align: center;
+            color: var(--muted);
+            font-size: 12px;
+            margin: 12px 0
+        }
+
+        .price {
+            font-size: 29px;
+            font-weight: 950
+        }
+
+        .bottom {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: min(520px, 100%);
+            height: 78px;
+            background: rgba(255, 255, 255, .96);
+            backdrop-filter: blur(18px);
+            border-top: 1px solid var(--line);
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            z-index: 30;
+            padding-bottom: env(safe-area-inset-bottom)
+        }
+
+        .nav {
+            background: transparent;
+            color: #555;
+            font-size: 11px;
+            font-weight: 800
+        }
+
+        .nav.active {
+            color: var(--blue)
+        }
+
+        .nav span {
+            display: block;
+            font-size: 23px;
+            margin-bottom: 2px
+        }
+
+        .modal-bg {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, .18);
+            z-index: 60;
+            display: flex;
+            align-items: flex-end
+        }
+
+        .sheet {
+            background: #fff;
+            width: min(520px, 100%);
+            max-height: 88vh;
+            overflow: auto;
+            border-radius: 26px 26px 0 0;
+            padding: 15px 16px 28px;
+            animation: sheet .22s ease
+        }
+
+        @keyframes sheet {
+            from {
+                transform: translateY(100%)
+            }
+
+            to {
+                transform: translateY(0)
+            }
+        }
+
+        .grabber {
+            width: 45px;
+            height: 5px;
+            border-radius: 10px;
+            background: #d5dbe5;
+            margin: 0 auto 15px
+        }
+
+        .sheet-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px
+        }
+
+        .sheet-title {
+            font-size: 21px;
+            font-weight: 900
+        }
+
+        .close {
+            background: #f5f5f5;
+            border-radius: 50%;
+            width: 38px;
+            height: 38px;
+            font-size: 20px
+        }
+
+        .search {
+            width: 100%;
+            padding: 13px 14px;
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            background: #fff;
+            outline: 0;
+            margin-bottom: 10px
+        }
+
+        .stop-list {
+            display: grid;
+            gap: 8px
+        }
+
+        .stop-item {
+            background: #fff;
+            border: 1px solid var(--line);
+            border-radius: 16px;
+            padding: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            text-align: left
+        }
+
+        .stop-item.selected {
+            background: #f5f5f5;
+            border-color: #000
+        }
+
+        .stop-name {
+            font-weight: 850
+        }
+
+        .stop-km {
+            font-size: 12px;
+            color: var(--muted);
+            margin-top: 3px
+        }
+
+        .check {
+            color: var(--blue);
+            font-weight: 950;
+            font-size: 20px
+        }
+
+        .type-card {
+            border: 1px solid var(--line);
+            border-radius: 17px;
+            padding: 12px;
+            display: grid;
+            grid-template-columns: 1fr 40px 52px 40px;
+            align-items: center;
+            gap: 8px;
+            margin: 8px 0
+        }
+
+        .type-card strong {
+            font-size: 15px
+        }
+
+        .type-price {
+            font-size: 12px;
+            color: var(--muted);
+            margin-top: 3px
+        }
+
+        .circle {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: #f5f5f5;
+            font-size: 22px;
+            font-weight: 900
+        }
+
+        .qty {
+            text-align: center;
+            font-weight: 950
+        }
+
+        .total {
+            background: #fafafa;
+            border-radius: 17px;
+            padding: 14px;
+            margin: 14px 0
+        }
+
+        .totalline {
+            display: flex;
+            justify-content: space-between;
+            margin: 6px 0
+        }
+
+        .totalgrand {
+            border-top: 1px solid var(--line);
+            padding-top: 10px;
+            margin-top: 10px;
+            font-size: 22px;
+            font-weight: 950
+        }
+
+        .paygrid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px
+        }
+
+        .pay {
+            padding: 16px;
+            border-radius: 17px;
+            color: #fff;
+            font-weight: 900
+        }
+
+        .pay.cash {
+            background: #000
+        }
+
+        .pay.card {
+            background: #000
+        }
+
+        .field {
+            margin-bottom: 12px
+        }
+
+        .field label {
+            display: block;
+            font-size: 12px;
+            font-weight: 800;
+            color: var(--muted);
+            margin-bottom: 6px
+        }
+
+        .field input {
+            width: 100%;
+            padding: 13px;
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            background: #fff;
+            outline: 0
+        }
+
+        .editor {
+            display: grid;
+            grid-template-columns: 1fr 82px 42px;
+            gap: 7px;
+            margin: 7px 0
+        }
+
+        .editor input {
+            width: 100%;
+            padding: 11px;
+            border: 1px solid var(--line);
+            border-radius: 12px
+        }
+
+        .x {
+            background: #f5f5f5;
+            color: #000;
+            border-radius: 12px;
+            font-size: 20px
+        }
+
+        .history {
+            border: 1px solid var(--line);
+            border-radius: 17px;
+            padding: 13px;
+            margin-bottom: 9px;
+            background: #fff
+        }
+
+        .hrow {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            font-weight: 850
+        }
+
+        .badge {
+            display: inline-block;
+            margin-top: 7px;
+            background: #eff6ff;
+            color: #000;
+            border-radius: 99px;
+            padding: 4px 8px;
+            font-size: 11px;
+            font-weight: 850
+        }
+
+        .empty {
+            text-align: center;
+            padding: 40px 10px;
+            color: var(--muted)
+        }
+
+        .loader {
+            position: fixed;
+            inset: 0;
+            background: #fff;
+            color: #000;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 20px
+        }
+
+        .loader-inner {
+            width: min(370px, 92%)
+        }
+
+        .loader-icon {
+            font-size: 76px
+        }
+
+        .loader-title {
+            font-size: 24px;
+            font-weight: 950;
+            margin-top: 12px
+        }
+
+        .loader-text {
+            color: #b9c6d6;
+            margin-top: 7px
+        }
+
+        .barbox {
+            height: 7px;
+            background: #e5e5e5;
+            border-radius: 99px;
+            overflow: hidden;
+            margin-top: 22px
+        }
+
+        .bar {
+            height: 100%;
+            width: 0;
+            background: #000;
+            animation: bar 5s linear forwards
+        }
+
+        @keyframes bar {
+            to {
+                width: 100%
+            }
+        }
+
+        .tap {
+            animation: tap 1s infinite
+        }
+
+        @keyframes tap {
+            50% {
+                transform: translateY(-5px) scale(1.05)
+            }
+        }
+
+        .ticket {
+            background: #fff;
+            color: #111827;
+            border-radius: 10px;
+            padding: 16px;
+            max-width: 350px;
+            margin: auto;
+            text-align: left;
+            font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, .10)
+        }
+
+        .tc {
+            text-align: center
+        }
+
+        .dash {
+            border-top: 1px dashed #94a3b8;
+            margin: 10px 0
+        }
+
+        .tr {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            margin: 5px 0
+        }
+
+        .grand {
+            font-size: 22px;
+            font-weight: 950
+        }
+
+        .toast {
+            position: fixed;
+            left: 50%;
+            bottom: 90px;
+            transform: translate(-50%, 20px);
+            opacity: 0;
+            background: #fff;
+            color: #000;
+            padding: 11px 15px;
+            border-radius: 13px;
+            z-index: 150;
+            font-size: 13px;
+            transition: .2s
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translate(-50%, 0)
+        }
+
+        @media(min-width:521px) {
+            body {
+                background: #fff
+            }
+
+            .app {
+                box-shadow: 0 0 20px rgba(0, 0, 0, .06)
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app">
+        <header class="header">
+            <div class="headrow">
+                <div class="logo">BUSPOS</div>
+                <div class="clock" id="clock">--:--:--</div>
+            </div>
+            <div class="route" id="routeLine">Настройте маршрут</div>
+        </header>
+
+        <section class="page" id="sales">
+            <div class="card hero">
+                <div class="caption">ТЕКУЩАЯ ПОЗИЦИЯ</div>
+                <div class="big" id="heroCurrent">—</div>
+                <div class="direction" id="heroDirection">—</div>
+            </div>
+
+            <div class="card">
+                <div class="caption">МАРШРУТ ПРОДАЖИ</div>
+                <button class="select-card" style="width:100%;margin-top:7px" id="chooseFrom">
+                    <div class="select-left">
+                        <div class="caption">Откуда</div>
+                        <div class="select-value" id="fromValue">—</div>
+                    </div>
+                    <div class="arrow">›</div>
+                </button>
+                <button class="select-card" style="width:100%;margin-top:9px" id="chooseTo">
+                    <div class="select-left">
+                        <div class="caption">Куда</div>
+                        <div class="select-value" id="toValue">—</div>
+                    </div>
+                    <div class="arrow">›</div>
+                </button>
+                <div class="distance" id="distText">Выберите остановки</div>
+                <button class="action primary" id="chooseTickets">Выбрать билеты</button>
+            </div>
+
+            <div class="card">
+                <div class="caption">СТОИМОСТЬ ОДНОГО ПОЛНОГО</div>
+                <div class="price" id="singlePrice">0,00 ₽</div>
+                <div class="caption" style="margin-top:5px">Тариф: 0,14 ₽ / км</div>
+            </div>
+        </section>
+
+        <section class="page hidden" id="settings">
+            <div class="card">
+                <h2 style="margin:0 0 15px">Настройки кассы</h2>
+                <div class="field"><label>Имя водителя</label><input id="driver" placeholder="Иванов Иван"></div>
+                <div class="field"><label>Гос. номер автобуса</label><input id="plate" placeholder="А123АА 69"></div>
+                <div class="field"><label>Номер автобусного парка</label><input id="park" placeholder="Парк №1"></div>
+                <div class="field"><label>Маршрут</label><input id="route" placeholder="101"></div>
+                <div class="field"><label>Направление</label><input id="direction" placeholder="СНТ Березка — АВ ТВЕРЬ">
+                </div>
+                <button class="action primary" id="saveMain">Сохранить настройки</button>
+            </div>
+            <div class="card">
+                <h3 style="margin-top:0">Остановки маршрута</h3>
+                <div class="caption" style="margin-bottom:10px">Километры считаются от начала маршрута.</div>
+                <div id="editStops"></div>
+                <button class="action secondary" id="addStop">＋ Добавить остановку</button>
+                <button class="action primary" style="margin-top:8px" id="saveStops">Сохранить остановки</button>
+            </div>
+            <div class="card">
+                <h3 style="margin-top:0">Коэффициенты тарифа</h3>
+                <div class="grid2">
+                    <div class="field"><label>Полный</label><input id="rateFull" type="number" step=".01"></div>
+                    <div class="field"><label>Льготный</label><input id="rateDiscount" type="number" step=".01"></div>
+                </div>
+                <div class="field"><label>Детский</label><input id="rateChild" type="number" step=".01"></div>
+                <button class="action primary" id="saveRates">Сохранить тарифы</button>
+            </div>
+        </section>
+
+        <section class="page hidden" id="history">
+            <div class="card">
+                <div style="display:flex;justify-content:space-between;align-items:center">
+                    <div>
+                        <h2 style="margin:0">История</h2>
+                        <div class="caption" style="margin-top:4px">Продажи на этом устройстве</div>
+                    </div><button class="x" id="clearHistory">×</button>
+                </div>
+            </div>
+            <div id="historyList"></div>
+        </section>
+
+        <nav class="bottom">
+            <button class="nav active" data-page="sales"><span>▣</span>Продажа</button>
+            <button class="nav" data-page="settings"><span>⚙</span>Настройки</button>
+            <button class="nav" data-page="history"><span>▤</span>История</button>
+        </nav>
+    </div>
+
+    <!-- Separate current-stop window -->
+    <div class="modal-bg hidden" id="fromModal">
+        <div class="sheet">
+            <div class="grabber"></div>
+            <div class="sheet-head">
+                <div class="sheet-title">Текущая остановка</div><button class="close" data-close="fromModal">×</button>
+            </div>
+            <input class="search" id="fromSearch" placeholder="Поиск остановки…">
+            <div class="stop-list" id="fromList"></div>
+        </div>
+    </div>
+
+    <!-- Separate destination window -->
+    <div class="modal-bg hidden" id="toModal">
+        <div class="sheet">
+            <div class="grabber"></div>
+            <div class="sheet-head">
+                <div class="sheet-title">Куда едет пассажир?</div><button class="close" data-close="toModal">×</button>
+            </div>
+            <input class="search" id="toSearch" placeholder="Поиск остановки…">
+            <div class="stop-list" id="toList"></div>
+        </div>
+    </div>
+
+    <!-- Separate ticket selection window -->
+    <div class="modal-bg hidden" id="ticketModal">
+        <div class="sheet">
+            <div class="grabber"></div>
+            <div class="sheet-head">
+                <div>
+                    <div class="sheet-title">Типы билетов</div>
+                    <div class="caption" id="ticketRoute">—</div>
+                </div><button class="close" data-close="ticketModal">×</button>
+            </div>
+            <div class="type-card">
+                <div><strong>Полный</strong>
+                    <div class="type-price" id="fullOne">0 ₽</div>
+                </div><button class="circle" data-t="full" data-o="-">−</button>
+                <div class="qty" id="qfull">0</div><button class="circle" data-t="full" data-o="+">+</button>
+            </div>
+            <div class="type-card">
+                <div><strong>Льготный</strong>
+                    <div class="type-price" id="discountOne">0 ₽</div>
+                </div><button class="circle" data-t="discount" data-o="-">−</button>
+                <div class="qty" id="qdiscount">0</div><button class="circle" data-t="discount" data-o="+">+</button>
+            </div>
+            <div class="type-card">
+                <div><strong>Детский</strong>
+                    <div class="type-price" id="childOne">0 ₽</div>
+                </div><button class="circle" data-t="child" data-o="-">−</button>
+                <div class="qty" id="qchild">0</div><button class="circle" data-t="child" data-o="+">+</button>
+            </div>
+            <div class="total">
+                <div class="totalline"><span>Билетов</span><b id="ticketCount">0</b></div>
+                <div class="totalline totalgrand"><span>Итого</span><span id="total">0 ₽</span></div>
+            </div>
+            <div class="paygrid"><button class="pay cash" id="cash">Наличные</button><button class="pay card"
+                    id="card">Карта</button></div>
+        </div>
+    </div>
+
+    <div class="loader hidden" id="loader">
+        <div class="loader-inner" id="loaderInner"></div>
+    </div>
+    <div class="toast" id="toast"></div>
+
+    <script>
+        const KEY = "buspos_pretty_v2";
+        const DEF = {
+            driver: "", plate: "", park: "Парк №1", route: "101", direction: "СНТ Березка — АВ ТВЕРЬ",
+            rates: { full: 1, discount: .5, child: .5 },
+            stops: [{ name: "СНТ Березка", km: 0 }, { name: "Деревня Старая", km: 3.2 }, { name: "Посёлок Южный", km: 6.8 }, { name: "Центральная", km: 10.5 }, { name: "Автовокзал Тверь", km: 14 }],
+            current: 0, destination: 4, history: [], receipt: 1001
+        };
+        let d = load(), qty = { full: 0, discount: 0, child: 0 };
+        function load() { try { let x = JSON.parse(localStorage.getItem(KEY) || "null"); return x ? Object.assign({}, DEF, x) : structuredClone(DEF) } catch (e) { return structuredClone(DEF) } }
+        function save() { localStorage.setItem(KEY, JSON.stringify(d)) }
+        function esc(x) { return String(x ?? "").replace(/[&<>"']/g, m => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" }[m])) }
+        function money(n) { return new Intl.NumberFormat("ru-RU", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n) + " ₽" }
+        function dist() { return Math.abs(d.stops[d.current].km - d.stops[d.destination].km) }
+        function base() { return dist() * .14 }
+        function toast(s) { let x = document.getElementById("toast"); x.textContent = s; x.classList.add("show"); setTimeout(() => x.classList.remove("show"), 2200) }
+        function render() {
+            document.getElementById("routeLine").textContent = `Маршрут №${d.route || "—"} • ${d.direction || "—"} • ${d.plate || "автобус"}`;
+            document.getElementById("heroCurrent").textContent = d.stops[d.current]?.name || "—";
+            document.getElementById("heroDirection").textContent = d.direction || "Направление не задано";
+            document.getElementById("fromValue").textContent = d.stops[d.current]?.name || "—";
+            document.getElementById("toValue").textContent = d.stops[d.destination]?.name || "—";
+            document.getElementById("distText").textContent = `Расстояние ${dist().toFixed(1)} км`;
+            document.getElementById("singlePrice").textContent = money(base());
+            renderSettings(); renderHistory();
+        }
+        function open(id) { document.getElementById(id).classList.remove("hidden") }
+        function close(id) { document.getElementById(id).classList.add("hidden") }
+        function stopList(kind) {
+            let q = (document.getElementById(kind === "from" ? "fromSearch" : "toSearch").value || "").toLowerCase();
+            let box = document.getElementById(kind === "from" ? "fromList" : "toList");
+            box.innerHTML = d.stops.map((s, i) => ({ s, i })).filter(x => x.s.name.toLowerCase().includes(q)).map(x => `
+ <button class="stop-item ${(kind === "from" ? d.current : d.destination) === x.i ? "selected" : ""}" data-pick="${kind}" data-i="${x.i}">
+  <div><div class="stop-name">${esc(x.s.name)}</div><div class="stop-km">${x.s.km} км от начала маршрута</div></div>
+  ${(kind === "from" ? d.current : d.destination) === x.i ? '<div class="check">✓</div>' : '<div>›</div>'}
+ </button>`).join("");
+        }
+        function openTickets() {
+            if (d.current === d.destination) { toast("Сначала выберите разные остановки"); return }
+            qty = { full: 0, discount: 0, child: 0 }; updateTickets(); open("ticketModal");
+        }
+        function updateTickets() {
+            let b = base();
+            document.getElementById("ticketRoute").textContent = `${d.stops[d.current].name} → ${d.stops[d.destination].name} • ${dist().toFixed(1)} км`;
+            for (let t of ["full", "discount", "child"]) {
+                document.getElementById("q" + t).textContent = qty[t];
+                document.getElementById(t + "One").textContent = money(b * d.rates[t]);
+            }
+            let count = qty.full + qty.discount + qty.child, total = b * (qty.full * d.rates.full + qty.discount * d.rates.discount + qty.child * d.rates.child);
+            document.getElementById("ticketCount").textContent = count; document.getElementById("total").textContent = money(total);
+        }
+        function renderSettings() {
+            ["driver", "plate", "park", "route", "direction"].forEach(k => document.getElementById(k).value = d[k] || "");
+            document.getElementById("rateFull").value = d.rates.full; document.getElementById("rateDiscount").value = d.rates.discount; document.getElementById("rateChild").value = d.rates.child;
+            document.getElementById("editStops").innerHTML = d.stops.map((s, i) => `<div class="editor"><input data-sn="${i}" value="${esc(s.name)}"><input data-sk="${i}" type="number" step=".1" value="${s.km}"><button class="x" data-rm="${i}">×</button></div>`).join("");
+        }
+        function renderHistory() {
+            let box = document.getElementById("historyList");
+            if (!d.history.length) { box.innerHTML = '<div class="card empty">Пока нет ни одной продажи.</div>'; return }
+            box.innerHTML = d.history.map(h => `<div class="history"><div class="hrow"><span>Чек №${h.receipt}</span><span>${money(h.total)}</span></div>
+ <div style="margin-top:7px"><b>${esc(h.from)}</b> → <b>${esc(h.to)}</b></div>
+ <div class="caption" style="margin-top:7px">${h.date} • ${h.payment === "cash" ? "Наличные" : "Карта"}</div>
+ <span class="badge">Полный ${h.qty.full} · Льготный ${h.qty.discount} · Детский ${h.qty.child}</span></div>`).join("");
+        }
+        function payment(method) {
+            let total = base() * (qty.full * d.rates.full + qty.discount * d.rates.discount + qty.child * d.rates.child);
+            if (total <= 0) { toast("Добавьте билеты"); return }
+            close("ticketModal"); open("loader");
+            let inner = document.getElementById("loaderInner");
+            if (method === "cash") inner.innerHTML = `<div class="loader-icon">▤</div><div class="loader-title">Печать билета</div><div class="loader-text">Идёт печать кассового билета…</div><div class="barbox"><div class="bar"></div></div>`;
+            else inner.innerHTML = `<div class="loader-icon tap">▣</div><div class="loader-title">Приложите карту</div><div class="loader-text">Ожидание банковской карты…</div><div class="barbox"><div class="bar" style="animation-duration:3s"></div></div>`;
+            setTimeout(() => {
+                if (method === "card") { inner.innerHTML = `<div class="loader-icon">✓</div><div class="loader-title">Оплата принята</div><div class="loader-text">Печатаем билет…</div><div class="barbox"><div class="bar" style="animation-duration:3s"></div></div>`; setTimeout(() => finish(method, total), 3000) }
+                else finish(method, total)
+            }, method === "cash" ? 5000 : 3000);
+        }
+        function finish(method, total) {
+            let receipt = d.receipt++, dt = new Date(), h = { receipt, date: dt.toLocaleString("ru-RU"), from: d.stops[d.current].name, to: d.stops[d.destination].name, total, payment: method, qty: { ...qty }, driver: d.driver, park: d.park };
+            d.history.unshift(h); save();
+            document.getElementById("loaderInner").innerHTML = `<div class="ticket">
+ <div class="tc"><b>АВТОБУСНЫЙ БИЛЕТ</b><br>Маршрут №${esc(d.route || "—")}</div><div class="dash"></div>
+ <div class="tr"><span>Дата</span><b>${dt.toLocaleDateString("ru-RU")}</b></div>
+ <div class="tr"><span>Время</span><b>${dt.toLocaleTimeString("ru-RU")}</b></div>
+ <div class="tr"><span>Водитель</span><b>${esc(d.driver || "—")}</b></div>
+ <div class="tr"><span>Автобус</span><b>${esc(d.plate || "—")}</b></div><div class="tr"><span>Парк</span><b>${esc(d.park || "—")}</b></div><div class="dash"></div>
+ <div><b>От:</b> ${esc(h.from)}</div><div><b>До:</b> ${esc(h.to)}</div><div class="dash"></div>
+ <div class="tr"><span>Полный ×${qty.full}</span><span>${money(base() * d.rates.full * qty.full)}</span></div>
+ <div class="tr"><span>Льготный ×${qty.discount}</span><span>${money(base() * d.rates.discount * qty.discount)}</span></div>
+ <div class="tr"><span>Детский ×${qty.child}</span><span>${money(base() * d.rates.child * qty.child)}</span></div><div class="dash"></div>
+ <div class="tr grand"><span>ИТОГО</span><span>${money(total)}</span></div><div class="dash"></div>
+ <div class="tc">${method === "cash" ? "НАЛИЧНЫЕ" : "КАРТА"}<br>ЧЕК № ${receipt}<br><small>Спасибо за поездку!</small></div></div>
+ <button class="action primary" style="margin-top:16px" id="finishBtn">Готово</button>`;
+            document.getElementById("finishBtn").onclick = () => { close("loader"); renderHistory(); };
+        }
+        document.getElementById("chooseFrom").onclick = () => { document.getElementById("fromSearch").value = ""; stopList("from"); open("fromModal") };
+        document.getElementById("chooseTo").onclick = () => { document.getElementById("toSearch").value = ""; stopList("to"); open("toModal") };
+        document.getElementById("chooseTickets").onclick = openTickets;
+        document.getElementById("fromSearch").oninput = () => stopList("from");
+        document.getElementById("toSearch").oninput = () => stopList("to");
+        document.addEventListener("click", e => {
+            let c = e.target.closest("[data-close]"); if (c) close(c.dataset.close);
+            let p = e.target.closest("[data-pick]"); if (p) { let i = +p.dataset.i; if (p.dataset.pick === "from") { d.current = i; save(); close("fromModal") } else { d.destination = i; save(); close("toModal") } render() }
+            let q = e.target.closest("[data-t]"); if (q) { let t = q.dataset.t; qty[t] = Math.max(0, qty[t] + (q.dataset.o === "+" ? 1 : -1)); updateTickets() }
+        });
+        document.getElementById("cash").onclick = () => payment("cash"); document.getElementById("card").onclick = () => payment("card");
+        document.querySelectorAll(".nav").forEach(n => n.onclick = () => { document.querySelectorAll(".nav").forEach(x => x.classList.remove("active")); n.classList.add("active"); document.querySelectorAll(".page").forEach(x => x.classList.add("hidden")); document.getElementById(n.dataset.page).classList.remove("hidden"); if (n.dataset.page === "settings") renderSettings(); if (n.dataset.page === "history") renderHistory() });
+        document.getElementById("saveMain").onclick = () => { ["driver", "plate", "park", "route", "direction"].forEach(k => d[k] = document.getElementById(k).value.trim()); save(); render(); toast("Настройки сохранены") };
+        document.getElementById("addStop").onclick = () => { d.stops.push({ name: "Новая остановка", km: (d.stops.at(-1)?.km || 0) + 1 }); renderSettings() };
+        document.getElementById("editStops").onclick = e => { let b = e.target.closest("[data-rm]"); if (!b) return; if (d.stops.length <= 2) { toast("Нужно минимум 2 остановки"); return } d.stops.splice(+b.dataset.rm, 1); d.current = Math.min(d.current, d.stops.length - 1); d.destination = Math.min(d.destination, d.stops.length - 1); renderSettings() };
+        document.getElementById("saveStops").onclick = () => { let ns = [...document.querySelectorAll("[data-sn]")], ks = [...document.querySelectorAll("[data-sk]")]; d.stops = ns.map((x, i) => ({ name: x.value.trim() || `Остановка ${i + 1}`, km: +ks[i].value || 0 })).sort((a, b) => a.km - b.km); d.current = Math.min(d.current, d.stops.length - 1); d.destination = Math.min(d.destination, d.stops.length - 1); save(); render(); toast("Остановки сохранены") };
+        document.getElementById("saveRates").onclick = () => { d.rates = { full: +document.getElementById("rateFull").value || 0, discount: +document.getElementById("rateDiscount").value || 0, child: +document.getElementById("rateChild").value || 0 }; save(); toast("Тарифы сохранены") };
+        document.getElementById("clearHistory").onclick = () => { if (confirm("Удалить всю историю продаж?")) { d.history = []; save(); renderHistory(); toast("История очищена") } };
+        function clock() { document.getElementById("clock").textContent = new Date().toLocaleTimeString("ru-RU") } setInterval(clock, 1000); clock(); render();
+    </script>
+</body>
+
+</html>
