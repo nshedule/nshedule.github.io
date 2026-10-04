@@ -301,6 +301,38 @@
             font-size: 20px
         }
 
+        .direction-option {
+            width: 100%;
+            background: #fff;
+            border: 1px solid var(--line);
+            border-radius: 17px;
+            padding: 16px;
+            text-align: left;
+            margin: 7px 0
+        }
+
+        .direction-option.selected {
+            background: #f5f5f5;
+            border-color: #000
+        }
+
+        .direction-option-title {
+            font-size: 16px;
+            font-weight: 900
+        }
+
+        .direction-option-sub {
+            font-size: 12px;
+            color: var(--muted);
+            margin-top: 4px
+        }
+
+        .direction-check {
+            float: right;
+            font-size: 20px;
+            font-weight: 950
+        }
+
         .search {
             width: 100%;
             padding: 13px 14px;
@@ -678,8 +710,14 @@
                 <div class="field"><label>Гос. номер автобуса</label><input id="plate" placeholder="А123АА 69"></div>
                 <div class="field"><label>Номер автобусного парка</label><input id="park" placeholder="Парк №1"></div>
                 <div class="field"><label>Маршрут</label><input id="route" placeholder="101"></div>
-                <div class="field"><label>Направление</label><input id="direction"
-                        placeholder="Автовокзал — СНТ «Берёзка»">
+                <div class="field"><label>Направление движения</label>
+                    <button class="select-card" style="width:100%" id="directionPicker" type="button">
+                        <div class="select-left">
+                            <div class="caption">Сейчас выбрано</div>
+                            <div class="select-value" id="directionValue">Автовокзал — СНТ «Берёзка»</div>
+                        </div>
+                        <div class="arrow">›</div>
+                    </button>
                 </div>
                 <button class="action primary" id="saveMain">Сохранить настройки</button>
             </div>
@@ -781,6 +819,28 @@
         </div>
     </div>
 
+    <div class="modal-bg hidden" id="directionModal">
+        <div class="sheet">
+            <div class="grabber"></div>
+            <div class="sheet-head">
+                <div class="sheet-title">Выберите направление</div><button class="close"
+                    data-close="directionModal">×</button>
+            </div>
+            <button class="direction-option" data-direction="forward" type="button"><span class="direction-check"
+                    id="directionCheckForward"></span>
+                <div class="direction-option-title">Автовокзал → СНТ «Берёзка»</div>
+                <div class="direction-option-sub">Остановки от Автовокзала до СНТ «Берёзка»</div>
+            </button>
+            <button class="direction-option" data-direction="reverse" type="button"><span class="direction-check"
+                    id="directionCheckReverse"></span>
+                <div class="direction-option-title">СНТ «Берёзка» → Автовокзал</div>
+                <div class="direction-option-sub">Остановки от СНТ «Берёзка» до Автовокзала</div>
+            </button>
+            <div class="caption" style="margin-top:12px">После сохранения остановки будут считаться и продаваться в
+                выбранном направлении.</div>
+        </div>
+    </div>
+
     <div class="loader hidden" id="loader">
         <div class="loader-inner" id="loaderInner"></div>
     </div>
@@ -810,17 +870,27 @@
                 { name: "Загородный-2", km: 10.55 },
                 { name: "Баламутово", km: 11.75 },
                 { name: "Поворот на Александровку", km: 12.60 },
-                { name: "СНТ Тверь", km: 13.30 },
+                { name: "Дачи", km: 13.30 },
                 { name: "Белая дорога", km: 14.30 },
                 { name: "СНТ Звезда", km: 15.35 },
                 { name: "СНТ Ольховая", km: 16.45 },
                 { name: "17-й км", km: 17.65 },
                 { name: "СНТ Берёзка", km: 19.00 }
             ],
-            current: 0, destination: 23, history: [], receipt: 1001
+            current: 0, destination: 23, directionMode: "forward", history: [], receipt: 1001
         };
         let d = load(), qty = { full: 0, discount: 0, child: 0 };
-        function load() { try { let x = JSON.parse(localStorage.getItem(KEY) || "null"); return x ? Object.assign({}, DEF, x) : structuredClone(DEF) } catch (e) { return structuredClone(DEF) } }
+        let pendingDirection = d.directionMode || "forward";
+        function load() { try { let x = JSON.parse(localStorage.getItem(KEY) || "null"); let r = x ? Object.assign({}, DEF, x) : structuredClone(DEF); if (!r.directionMode) r.directionMode = "forward"; return r } catch (e) { let r = structuredClone(DEF); r.directionMode = "forward"; return r } }
+        function directionText(mode = d.directionMode || "forward") { return mode === "reverse" ? "СНТ «Берёзка» — Автовокзал" : "Автовокзал — СНТ «Берёзка»" }
+        function applyDirection(mode) {
+            if (mode === (d.directionMode || "forward")) { d.direction = directionText(mode); return }
+            const maxKm = Math.max(...d.stops.map(s => Number(s.km) || 0));
+            d.stops = d.stops.slice().reverse().map(s => ({ name: s.name, km: +(maxKm - (Number(s.km) || 0)).toFixed(2) }));
+            d.current = d.stops.length - 1 - d.current;
+            d.destination = d.stops.length - 1 - d.destination;
+            d.directionMode = mode; d.direction = directionText(mode);
+        }
         function save() { localStorage.setItem(KEY, JSON.stringify(d)) }
         function esc(x) { return String(x ?? "").replace(/[&<>"']/g, m => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" }[m])) }
         function money(n) { return new Intl.NumberFormat("ru-RU", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n) + " ₽" }
@@ -863,7 +933,8 @@
             document.getElementById("ticketCount").textContent = count; document.getElementById("total").textContent = money(total);
         }
         function renderSettings() {
-            ["driver", "plate", "park", "route", "direction"].forEach(k => document.getElementById(k).value = d[k] || "");
+            ["driver", "plate", "park", "route"].forEach(k => document.getElementById(k).value = d[k] || "");
+            document.getElementById("directionValue").textContent = directionText();
             document.getElementById("rateFull").value = d.rates.full; document.getElementById("rateDiscount").value = d.rates.discount; document.getElementById("rateChild").value = d.rates.child;
             document.getElementById("editStops").innerHTML = d.stops.map((s, i) => `<div class="editor"><input data-sn="${i}" value="${esc(s.name)}"><input data-sk="${i}" type="number" step=".1" value="${s.km}"><button class="x" data-rm="${i}">×</button></div>`).join("");
         }
@@ -917,7 +988,24 @@
         });
         document.getElementById("cash").onclick = () => payment("cash"); document.getElementById("card").onclick = () => payment("card");
         document.querySelectorAll(".nav").forEach(n => n.onclick = () => { document.querySelectorAll(".nav").forEach(x => x.classList.remove("active")); n.classList.add("active"); document.querySelectorAll(".page").forEach(x => x.classList.add("hidden")); document.getElementById(n.dataset.page).classList.remove("hidden"); if (n.dataset.page === "settings") renderSettings(); if (n.dataset.page === "history") renderHistory() });
-        document.getElementById("saveMain").onclick = () => { ["driver", "plate", "park", "route", "direction"].forEach(k => d[k] = document.getElementById(k).value.trim()); save(); render(); toast("Настройки сохранены") };
+        document.getElementById("directionPicker").onclick = () => {
+            pendingDirection = d.directionMode || "forward";
+            document.querySelectorAll("[data-direction]").forEach(x => x.classList.toggle("selected", x.dataset.direction === pendingDirection));
+            document.getElementById("directionCheckForward").textContent = pendingDirection === "forward" ? "✓" : "";
+            document.getElementById("directionCheckReverse").textContent = pendingDirection === "reverse" ? "✓" : "";
+            open("directionModal");
+        };
+        document.querySelectorAll("[data-direction]").forEach(btn => btn.onclick = () => {
+            pendingDirection = btn.dataset.direction;
+            document.querySelectorAll("[data-direction]").forEach(x => x.classList.toggle("selected", x.dataset.direction === pendingDirection));
+            document.getElementById("directionCheckForward").textContent = pendingDirection === "forward" ? "✓" : "";
+            document.getElementById("directionCheckReverse").textContent = pendingDirection === "reverse" ? "✓" : "";
+            close("directionModal"); document.getElementById("directionValue").textContent = directionText(pendingDirection);
+        });
+        document.getElementById("saveMain").onclick = () => {
+            ["driver", "plate", "park", "route"].forEach(k => d[k] = document.getElementById(k).value.trim());
+            applyDirection(pendingDirection); save(); render(); toast("Настройки сохранены");
+        };
         document.getElementById("addStop").onclick = () => { d.stops.push({ name: "Новая остановка", km: (d.stops.at(-1)?.km || 0) + 1 }); renderSettings() };
         document.getElementById("editStops").onclick = e => { let b = e.target.closest("[data-rm]"); if (!b) return; if (d.stops.length <= 2) { toast("Нужно минимум 2 остановки"); return } d.stops.splice(+b.dataset.rm, 1); d.current = Math.min(d.current, d.stops.length - 1); d.destination = Math.min(d.destination, d.stops.length - 1); renderSettings() };
         document.getElementById("saveStops").onclick = () => { let ns = [...document.querySelectorAll("[data-sn]")], ks = [...document.querySelectorAll("[data-sk]")]; d.stops = ns.map((x, i) => ({ name: x.value.trim() || `Остановка ${i + 1}`, km: +ks[i].value || 0 })).sort((a, b) => a.km - b.km); d.current = Math.min(d.current, d.stops.length - 1); d.destination = Math.min(d.destination, d.stops.length - 1); save(); render(); toast("Остановки сохранены") };
