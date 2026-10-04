@@ -678,7 +678,8 @@
                 <div class="field"><label>Гос. номер автобуса</label><input id="plate" placeholder="А123АА 69"></div>
                 <div class="field"><label>Номер автобусного парка</label><input id="park" placeholder="Парк №1"></div>
                 <div class="field"><label>Маршрут</label><input id="route" placeholder="101"></div>
-                <div class="field"><label>Направление</label><input id="direction" placeholder="СНТ Березка — АВ ТВЕРЬ">
+                <div class="field"><label>Направление</label><input id="direction"
+                        placeholder="Автовокзал — СНТ «Берёзка»">
                 </div>
                 <button class="action primary" id="saveMain">Сохранить настройки</button>
             </div>
@@ -786,12 +787,37 @@
     <div class="toast" id="toast"></div>
 
     <script>
-        const KEY = "buspos_pretty_v2";
+        const KEY = "buspos_pretty_v3_102";
         const DEF = {
-            driver: "", plate: "", park: "Парк №1", route: "101", direction: "СНТ Березка — АВ ТВЕРЬ",
+            driver: "", plate: "", park: "Тверской автобусный парк №1", route: "102", direction: "Автовокзал — СНТ «Берёзка»",
             rates: { full: 1, discount: .5, child: .5 },
-            stops: [{ name: "СНТ Березка", km: 0 }, { name: "Деревня Старая", km: 3.2 }, { name: "Посёлок Южный", km: 6.8 }, { name: "Центральная", km: 10.5 }, { name: "Автовокзал Тверь", km: 14 }],
-            current: 0, destination: 4, history: [], receipt: 1001
+            stops: [
+                { name: "Автовокзал", km: 0.00 },
+                { name: "Железнодорожный вокзал", km: 0.90 },
+                { name: "Площадь Капошвара", km: 1.60 },
+                { name: "Тверской проспект", km: 2.20 },
+                { name: "Речной вокзал", km: 3.10 },
+                { name: "Пожарная площадь", km: 3.75 },
+                { name: "Учебный комбинат", km: 4.35 },
+                { name: "Третьяковский переулок", km: 4.70 },
+                { name: "Исаевский ручей", km: 5.40 },
+                { name: "Автобусный парк", km: 5.98 },
+                { name: "Улица Шишкова, 98А", km: 6.32 },
+                { name: "ДРСУ", km: 6.87 },
+                { name: "Поворот на Глазково", km: 7.30 },
+                { name: "Змеёво", km: 8.65 },
+                { name: "Загородный-1", km: 9.70 },
+                { name: "Загородный-2", km: 10.55 },
+                { name: "Баламутово", km: 11.75 },
+                { name: "Поворот на Александровку", km: 12.60 },
+                { name: "СНТ Тверь", km: 13.30 },
+                { name: "Белая дорога", km: 14.30 },
+                { name: "СНТ Звезда", km: 15.35 },
+                { name: "СНТ Ольховая", km: 16.45 },
+                { name: "17-й км", km: 17.65 },
+                { name: "СНТ Берёзка", km: 19.00 }
+            ],
+            current: 0, destination: 23, history: [], receipt: 1001
         };
         let d = load(), qty = { full: 0, discount: 0, child: 0 };
         function load() { try { let x = JSON.parse(localStorage.getItem(KEY) || "null"); return x ? Object.assign({}, DEF, x) : structuredClone(DEF) } catch (e) { return structuredClone(DEF) } }
